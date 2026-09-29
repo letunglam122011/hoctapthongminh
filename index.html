@@ -30,6 +30,7 @@
                         'pulse-glow': 'pulseGlow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'spin-slow': 'spin 8s linear infinite',
                         'bounce-short': 'bounceShort 0.6s ease-in-out infinite alternate',
+                        'float': 'float 3s ease-in-out infinite',
                     },
                     keyframes: {
                         pulseGlow: {
@@ -39,6 +40,10 @@
                         bounceShort: {
                             '0%': { transform: 'translateY(0)' },
                             '100%': { transform: 'translateY(-6px)' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-8px)' }
                         }
                     }
                 }
@@ -85,21 +90,28 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #00ffcc; }
 
-        /* Frames */
-        .frame-mythic { border: 3px solid #eab308; box-shadow: 0 0 15px #eab308; animation: pulse 1.5s infinite; }
-        .frame-diamond { border: 3px solid #00ffcc; box-shadow: 0 0 15px #00ffcc; }
-        .frame-platinum { border: 3px solid #a855f7; box-shadow: 0 0 15px #a855f7; }
+        /* Frames & Glows */
+        .frame-mythic { border: 3px solid #eab308; box-shadow: 0 0 20px rgba(234, 179, 8, 0.6); }
+        .frame-diamond { border: 3px solid #00ffcc; box-shadow: 0 0 20px rgba(0, 255, 204, 0.6); }
+        .frame-platinum { border: 3px solid #a855f7; box-shadow: 0 0 20px rgba(168, 85, 247, 0.6); }
         .frame-none { border: 2px solid #334155; }
 
         /* Path Line for Duolingo Tree */
         .path-line {
             position: absolute;
-            width: 4px;
-            background: linear-gradient(to bottom, #00ffcc, #a855f7);
+            width: 6px;
+            background: linear-gradient(to bottom, #00ffcc, #a855f7, #ec4899);
             z-index: 0;
             left: 50%;
             transform: translateX(-50%);
+            border-radius: 4px;
         }
+        
+        .node-zigzag-1 { transform: translateX(-50px); }
+        .node-zigzag-2 { transform: translateX(50px); }
+        .node-zigzag-3 { transform: translateX(0px); }
+        .node-zigzag-4 { transform: translateX(-40px); }
+        .node-zigzag-5 { transform: translateX(40px); }
     </style>
 </head>
 <body class="min-h-screen bg-[#07090e] text-slate-100 flex flex-col justify-between selection:bg-cyan-500 selection:text-black">
@@ -256,11 +268,11 @@
         </div>
     </div>
 
-    <!-- SECTION 2: DUOLINGO-STYLE LEARNING PATH -->
+    <!-- ==========================================
+       SECTION 2: DUOLINGO-STYLE LEARNING PATH
+       ========================================================== -->
     <div id="tab-path" class="tab-content hidden space-y-6">
-        <!-- Controls Header -->
         <div class="cyber-glass p-4 rounded-2xl border-cyan-500/30 flex flex-wrap items-center justify-between gap-4">
-            <!-- Grade Select -->
             <div class="flex items-center gap-2">
                 <label class="text-xs font-bold font-orbitron text-cyan-400">KHỐI LỚP:</label>
                 <select id="pathGradeSelect" onchange="changePathFilter()" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs font-bold text-white focus:outline-none focus:border-cyan-400">
@@ -273,88 +285,112 @@
                     <option value="12">Lớp 12</option>
                 </select>
             </div>
-
-            <!-- Subject Select Buttons -->
             <div class="flex items-center gap-2 overflow-x-auto py-1 custom-scrollbar" id="pathSubjectTabs">
                 <!-- Injected by JS -->
             </div>
         </div>
 
-        <!-- Path Map View -->
-        <div class="cyber-glass rounded-3xl p-6 border-cyan-500/30 min-h-[500px] relative overflow-hidden flex flex-col items-center">
-            <div class="text-center mb-8 relative z-10">
+        <div class="cyber-glass rounded-3xl p-6 md:p-10 border-cyan-500/30 min-h-[600px] relative overflow-hidden flex flex-col items-center">
+            <div class="text-center mb-10 relative z-10 max-w-xl">
                 <span id="pathSubjectBadge" class="px-3 py-1 bg-cyan-500/20 text-cyan-300 font-bold text-xs rounded-full border border-cyan-500/30 uppercase tracking-widest">
                     SÁCH KẾT NỐI TRI THỨC - LỚP 9 - TOÁN HỌC
                 </span>
-                <h2 id="pathTitle" class="text-2xl font-black font-orbitron text-white mt-2">HÀNH TRÌNH CHINH PHỤC CHỦ ĐỀ</h2>
-                <p class="text-xs text-slate-400">Hoàn thành lần lượt các chặng từ Nhận Biết đến Vận Dụng Cao để mở khóa quà xịn!</p>
+                <h2 id="pathTitle" class="text-2xl md:text-3xl font-black font-orbitron text-white mt-3">BẢN ĐỒ CHINH PHỤC CHỦ ĐỀ</h2>
+                <p class="text-xs text-slate-400 mt-1">Vượt qua từng mốc kiến thức SGK, thu thập ngôi sao và phần thưởng độc quyền!</p>
             </div>
-
-            <!-- Path Canvas Container -->
-            <div class="relative w-full max-w-md py-10 flex flex-col items-center gap-12" id="pathNodesContainer">
-                <!-- Path Line -->
-                <div class="path-line h-full top-0"></div>
-                <!-- Nodes generated dynamically -->
+            <div class="relative w-full max-w-md py-6 flex flex-col items-center gap-10" id="pathNodesContainer">
+                <div class="path-line h-[90%] top-10"></div>
             </div>
         </div>
     </div>
 
-    <!-- SECTION 3: ARENA & BATTLE MODES -->
+    <!-- ==========================================
+       SECTION 3: ARENA & BATTLE MODES (QUIZIZZ)
+       ========================================================== -->
     <div id="tab-arena" class="tab-content hidden space-y-6">
         <div class="text-center max-w-xl mx-auto my-2">
             <h2 class="text-2xl font-black font-orbitron cyber-gradient-text">ĐẤU TRƯỜNG THI ĐẤU REALTIME</h2>
-            <p class="text-xs text-slate-400 mt-1">Thi đấu cùng bạn bè học sinh toàn quốc - Chuẩn bị kiến thức Kết Nối Tri Thức</p>
+            <p class="text-xs text-slate-400 mt-1">So tài kiến thức SGK Kết Nối Tri Thức với học sinh toàn quốc - Giành cúp vinh quang</p>
         </div>
 
-        <div class="grid md:grid-cols-3 gap-6">
+        <div class="grid md:grid-cols-4 gap-4">
             <!-- Mode 1: Survival 50 -->
-            <div class="cyber-glass rounded-3xl p-6 border border-red-500/30 hover:border-red-500/80 transition-all flex flex-col justify-between group">
+            <div class="cyber-glass rounded-3xl p-5 border border-red-500/30 hover:border-red-500/80 transition-all flex flex-col justify-between group relative overflow-hidden">
                 <div>
-                    <div class="flex justify-between items-start mb-4">
-                        <span class="px-2.5 py-1 rounded-md bg-red-500/20 text-red-400 text-xs font-bold border border-red-500/30">BOOYAH SCHOLAR</span>
-                        <i class="fa-solid fa-users-rays text-3xl text-red-500/40 group-hover:text-red-500 transition-colors"></i>
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-[10px] font-bold border border-red-500/30">BOOYAH</span>
+                        <i class="fa-solid fa-users-rays text-2xl text-red-500/40 group-hover:text-red-500"></i>
                     </div>
-                    <h3 class="text-xl font-bold font-orbitron text-white mb-2">ĐẤU SINH TỒN 50</h3>
-                    <p class="text-xs text-slate-400 mb-4">50 Thí sinh thi loại trực tiếp qua mỗi câu hỏi. Ai trụ lại cuối cùng sẽ giành danh hiệu BOOYAH TRI THỨC!</p>
+                    <h3 class="text-lg font-bold font-orbitron text-white mb-2">SINH TỒN 50</h3>
+                    <p class="text-xs text-slate-400 mb-4">Loại trực tiếp qua mỗi câu hỏi. Trụ lại cuối cùng giành chiến thắng!</p>
                 </div>
-                <button onclick="startArenaMatch('survival')" class="w-full py-3 bg-red-600 hover:bg-red-500 font-bold font-orbitron text-white rounded-xl shadow-lg transition-all text-xs flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-skull"></i> THAM GIA SINH TỒN
+                <button onclick="startArenaMatch('survival')" class="w-full py-2.5 bg-red-600 hover:bg-red-500 font-bold font-orbitron text-white rounded-xl shadow-lg transition-all text-xs">
+                    <i class="fa-solid fa-skull mr-1"></i> THAM GIA
                 </button>
             </div>
 
             <!-- Mode 2: 1v1 Speed -->
-            <div class="cyber-glass rounded-3xl p-6 border border-cyan-500/30 hover:border-cyan-500/80 transition-all flex flex-col justify-between group">
+            <div class="cyber-glass rounded-3xl p-5 border border-cyan-500/30 hover:border-cyan-500/80 transition-all flex flex-col justify-between group relative overflow-hidden">
                 <div>
-                    <div class="flex justify-between items-start mb-4">
-                        <span class="px-2.5 py-1 rounded-md bg-cyan-500/20 text-cyan-400 text-xs font-bold border border-cyan-500/30">RANKED 1V1</span>
-                        <i class="fa-solid fa-bolt text-3xl text-cyan-500/40 group-hover:text-cyan-500 transition-colors"></i>
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-400 text-[10px] font-bold border border-cyan-500/30">RANKED</span>
+                        <i class="fa-solid fa-bolt text-2xl text-cyan-500/40 group-hover:text-cyan-500"></i>
                     </div>
-                    <h3 class="text-xl font-bold font-orbitron text-white mb-2">ĐẤU ĐƠN TRÍ TUỆ</h3>
-                    <p class="text-xs text-slate-400 mb-4">Ghép đối thủ ngẫu nhiên đồng cấp. Giải nhanh và chính xác để cướp điểm RP thăng hạng Rank!</p>
+                    <h3 class="text-lg font-bold font-orbitron text-white mb-2">1V1 TỐC ĐỘ</h3>
+                    <p class="text-xs text-slate-400 mb-4">Ghép đối thủ đồng cấp. Giải nhanh cướp điểm RP thăng hạng!</p>
                 </div>
-                <button onclick="startArenaMatch('1v1')" class="w-full py-3 bg-cyan-500 hover:bg-cyan-400 font-bold font-orbitron text-black rounded-xl shadow-lg transition-all text-xs flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-crosshairs"></i> TÌM TRẬN 1V1
+                <button onclick="startArenaMatch('1v1')" class="w-full py-2.5 bg-cyan-500 hover:bg-cyan-400 font-bold font-orbitron text-black rounded-xl shadow-lg transition-all text-xs">
+                    <i class="fa-solid fa-crosshairs mr-1"></i> TÌM TRẬN
                 </button>
             </div>
 
-            <!-- Mode 3: 2v2 Duo -->
-            <div class="cyber-glass rounded-3xl p-6 border border-purple-500/30 hover:border-purple-500/80 transition-all flex flex-col justify-between group">
+            <!-- Mode 3: Quizizz Live Host -->
+            <div class="cyber-glass rounded-3xl p-5 border border-amber-500/30 hover:border-amber-500/80 transition-all flex flex-col justify-between group relative overflow-hidden">
                 <div>
-                    <div class="flex justify-between items-start mb-4">
-                        <span class="px-2.5 py-1 rounded-md bg-purple-500/20 text-purple-400 text-xs font-bold border border-purple-500/30">ĐỒNG ĐỘI ROOM</span>
-                        <i class="fa-solid fa-user-group text-3xl text-purple-500/40 group-hover:text-purple-500 transition-colors"></i>
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 text-[10px] font-bold border border-amber-500/30">QUIZIZZ LIVE</span>
+                        <i class="fa-solid fa-tower-broadcast text-2xl text-amber-500/40 group-hover:text-amber-500"></i>
                     </div>
-                    <h3 class="text-xl font-bold font-orbitron text-white mb-2">ĐỒNG ĐỘI SONG HÀNH 2V2</h3>
-                    <p class="text-xs text-slate-400 mb-4">Nhập mã phòng tạo lập cùng bạn lớp học. Phối hợp giải đề tổng hợp kiến thức đạt điểm cao nhất.</p>
+                    <h3 class="text-lg font-bold font-orbitron text-white mb-2">ĐẤU TRƯỜNG TRỰC TIẾP</h3>
+                    <p class="text-xs text-slate-400 mb-4">Màn hình lớn hiển thị bảng xếp hạng trực tiếp sau mỗi câu hỏi!</p>
                 </div>
-                <button onclick="startArenaMatch('2v2')" class="w-full py-3 bg-purple-600 hover:bg-purple-500 font-bold font-orbitron text-white rounded-xl shadow-lg transition-all text-xs flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-key"></i> TẠO / NHẬP MÃ PHÒNG
+                <button onclick="startQuizizzLiveSession()" class="w-full py-2.5 bg-amber-600 hover:bg-amber-500 font-bold font-orbitron text-white rounded-xl shadow-lg transition-all text-xs">
+                    <i class="fa-solid fa-play mr-1"></i> VÀO PHÒNG LIVE
+                </button>
+            </div>
+
+            <!-- Mode 4: 2v2 Duo -->
+            <div class="cyber-glass rounded-3xl p-5 border border-purple-500/30 hover:border-purple-500/80 transition-all flex flex-col justify-between group relative overflow-hidden">
+                <div>
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-400 text-[10px] font-bold border border-purple-500/30">TEAM</span>
+                        <i class="fa-solid fa-user-group text-2xl text-purple-500/40 group-hover:text-purple-500"></i>
+                    </div>
+                    <h3 class="text-lg font-bold font-orbitron text-white mb-2">ĐỒNG ĐỘI 2V2</h3>
+                    <p class="text-xs text-slate-400 mb-4">Nhập mã phòng tạo lập cùng bạn bè phối hợp giải đề tổng hợp.</p>
+                </div>
+                <button onclick="startArenaMatch('2v2')" class="w-full py-2.5 bg-purple-600 hover:bg-purple-500 font-bold font-orbitron text-white rounded-xl shadow-lg transition-all text-xs">
+                    <i class="fa-solid fa-key mr-1"></i> MÃ PHÒNG
                 </button>
             </div>
         </div>
 
-        <!-- Gameplay Canvas Window (Shared by Path Learning & Arena) -->
-        <div id="gamePlayArea" class="hidden cyber-glass rounded-3xl p-6 border-cyan-500/50 relative overflow-hidden shadow-2xl">
+        <!-- Quizizz Power-ups Bar -->
+        <div id="powerUpsBar" class="hidden flex items-center justify-center gap-3 bg-slate-900/90 border border-slate-800 p-3 rounded-2xl">
+            <span class="text-xs font-bold text-yellow-400 font-orbitron mr-2"><i class="fa-solid fa-bolt"></i> VẬT PHẨM QUIZIZZ:</span>
+            <button onclick="usePowerUp('5050')" id="pw5050" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-bold text-cyan-300 transition-all">
+                <i class="fa-solid fa-scissors"></i> 50:50 (Loại 2 đáp án sai)
+            </button>
+            <button onclick="usePowerUp('double')" id="pwDouble" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-bold text-yellow-300 transition-all">
+                <i class="fa-solid fa-angles-up"></i> X2 Điểm Câu Này
+            </button>
+            <button onclick="usePowerUp('time')" id="pwTime" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-bold text-purple-300 transition-all">
+                <i class="fa-solid fa-stopwatch"></i> Thêm +10s Thời Gian
+            </button>
+        </div>
+
+        <!-- Gameplay Canvas Window -->
+        <div id="gamePlayArea" class="hidden cyber-glass rounded-3xl p-6 md:p-8 border-cyan-500/50 relative overflow-hidden shadow-2xl animate-pulse-glow">
             <!-- Game Header -->
             <div class="flex flex-wrap justify-between items-center gap-4 border-b border-slate-800 pb-4 mb-6">
                 <div class="flex items-center gap-3">
@@ -362,6 +398,9 @@
                         1V1 ARENA
                     </span>
                     <span class="text-xs text-slate-400">Câu <span id="currentQNum" class="text-white font-bold">1</span>/<span id="totalQNum">5</span></span>
+                    <span id="streakBadge" class="hidden px-2.5 py-0.5 bg-orange-500/20 text-orange-400 font-bold text-xs rounded-full border border-orange-500/30">
+                        <i class="fa-solid fa-fire"></i> Streak x<span id="streakMultiplier">1</span>
+                    </span>
                 </div>
 
                 <!-- Timer Bar -->
@@ -413,6 +452,25 @@
                 <p id="explanationText" class="text-slate-300 leading-relaxed">
                     Lời giải giải thích từng bước...
                 </p>
+            </div>
+        </div>
+
+        <!-- QUIZIZZ LIVE LEADERBOARD MODAL -->
+        <div id="quizizzLeaderboardModal" class="hidden cyber-glass rounded-3xl p-6 md:p-8 border-amber-500/50 space-y-6">
+            <div class="text-center">
+                <span class="px-3 py-1 bg-amber-500/20 text-amber-300 font-bold text-xs rounded-full border border-amber-500/30 font-orbitron">BẢNG XẾP HẠNG TRỰC TIẾP QUIZIZZ LIVE</span>
+                <h3 class="text-2xl font-black font-orbitron text-white mt-2">BXH SAU CÂU HỎI</h3>
+                <p class="text-xs text-slate-400">Điểm số được tính dựa trên độ chính xác và tốc độ trả lời!</p>
+            </div>
+
+            <div id="liveLeaderboardList" class="space-y-2 max-w-xl mx-auto">
+                <!-- Injected dynamically -->
+            </div>
+
+            <div class="text-center pt-4">
+                <button onclick="nextQuizizzQuestion()" class="px-8 py-3 bg-amber-600 hover:bg-amber-500 font-bold font-orbitron text-white rounded-xl shadow-lg text-xs">
+                    TIẾP TỤC CÂU TIẾP THEO <i class="fa-solid fa-arrow-right ml-1"></i>
+                </button>
             </div>
         </div>
     </div>
@@ -515,17 +573,17 @@
         <div class="flex justify-between items-center border-b border-slate-800 pb-4">
             <div>
                 <h2 class="text-xl font-bold font-orbitron text-white">CỬA HÀNG SKIN & TRÂN BẢO</h2>
-                <p class="text-xs text-slate-400">Trang bị ngoại trang Cyberpunk để tỏa sáng rực rỡ trong Đấu Trường</p>
+                <p class="text-xs text-slate-400">Trang bị ngoại trang Cyberpunk và hiệu ứng độc quyền để tỏa sáng trong Đấu Trường</p>
             </div>
-            <div class="bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 px-4 py-2 rounded-xl text-xs font-bold">
-                <i class="fa-solid fa-coins mr-1"></i> <span id="shopUserCoins">1,250</span> Xu
+            <div class="bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5">
+                <i class="fa-solid fa-coins"></i> <span id="shopUserCoins">1,250</span> Xu
             </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="space-y-4 md:col-span-2">
                 <h3 class="text-sm font-bold font-orbitron text-cyan-400 flex items-center gap-2">
-                    <i class="fa-solid fa-user-ninja"></i> TRANG PHỤC / SKIN NHÂN VẬT
+                    <i class="fa-solid fa-user-ninja"></i> TRANG PHỤC / SKIN NHÂN VẬT CYBER
                 </h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="skinsShopGrid">
                     <!-- Skins loaded by JS -->
@@ -534,7 +592,7 @@
 
             <div class="space-y-4">
                 <h3 class="text-sm font-bold font-orbitron text-purple-400 flex items-center gap-2">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> KHUNG & HIỆU ỨNG
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> KHUNG & HIỆU ỨNG VINH QUANG
                 </h3>
                 <div class="space-y-3" id="framesShopGrid">
                     <!-- Frames loaded by JS -->
@@ -545,22 +603,36 @@
 
     <!-- SECTION 6: LUCKY SPIN WHEEL -->
     <div id="tab-spin" class="tab-content hidden space-y-6 text-center">
-        <div class="max-w-md mx-auto cyber-glass p-6 rounded-3xl border-yellow-500/30">
-            <h2 class="text-2xl font-black font-orbitron text-yellow-400 mb-1">VÒNG QUAY MAY MẮN</h2>
-            <p class="text-xs text-slate-400 mb-6">Quay ngay mỗi ngày để nhận Xu, Điểm RP và Thẻ Bảo Vệ Rank!</p>
+        <div class="max-w-xl mx-auto cyber-glass p-6 rounded-3xl border-yellow-500/30">
+            <h2 class="text-2xl font-black font-orbitron text-yellow-400 mb-1">VÒNG QUAY MAY MẮN (PHẦN THƯỞNG & PHẠT)</h2>
+            <p class="text-xs text-slate-400 mb-6">Quay ngay mỗi ngày để nhận Xu, RP, Rủi ro mất xu hoặc Thẻ Bảo Vệ Rank!</p>
 
             <div class="relative w-64 h-64 mx-auto mb-6 flex items-center justify-center">
                 <div class="absolute -top-3 left-1/2 -translate-x-1/2 z-20 text-yellow-400 text-2xl">
                     <i class="fa-solid fa-caret-down"></i>
                 </div>
                 <div id="wheelGraphic" class="w-full h-full rounded-full border-4 border-yellow-500 shadow-xl transition-transform duration-[4000ms] cubic-bezier(0.15, 0.9, 0.15, 1) bg-slate-900 overflow-hidden relative flex items-center justify-center text-xs font-bold">
-                    <div class="text-cyan-400 font-orbitron p-4 border border-cyan-500/40 rounded-full">300 XU • 50 RP • PRO BADGE</div>
+                    <div class="text-cyan-400 font-orbitron p-4 border border-cyan-500/40 rounded-full text-center">VÒNG QUAY<br>ĐA DẠNG MÙA 2026</div>
                 </div>
             </div>
 
             <button onclick="spinWheel()" id="spinBtn" class="cyber-button font-orbitron font-black text-black px-8 py-3 rounded-xl shadow-lg hover:scale-105 transition-all text-sm">
                 <i class="fa-solid fa-dharmachakra"></i> QUAY NGAY (100 XU)
             </button>
+
+            <div class="mt-6 text-left bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
+                <h4 class="text-xs font-bold font-orbitron text-yellow-400 mb-2"><i class="fa-solid fa-gift mr-1"></i> Danh sách Ô Thưởng & Phạt trong Vòng Quay:</h4>
+                <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-300">
+                    <div>✨ +500 XU (Đại Thắng)</div>
+                    <div>💎 +100 Điểm RP</div>
+                    <div>🔥 X2 Chuỗi Ngày (Streak)</div>
+                    <div>🛡️ Thẻ Bảo Vệ Rank</div>
+                    <div>🍀 Thêm Lượt Quay Miễn Phí</div>
+                    <div>💸 Phạt: Trừ 100 Xu (Xui Xẻo)</div>
+                    <div>⚡ Phạt: Đóng Băng 1 Trận</div>
+                    <div>🎁 Quà Bí Mật Đặc Biệt</div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -577,7 +649,6 @@
                 </span>
             </div>
 
-            <!-- Messages Log -->
             <div id="chatMessagesLog" class="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-2 mb-4">
                 <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-xs">
                     <span class="font-bold text-cyan-400">Thầy Cyber AI:</span>
@@ -585,7 +656,6 @@
                 </div>
             </div>
 
-            <!-- Chat Input -->
             <form onsubmit="sendChatMessage(event)" class="flex gap-2">
                 <input type="text" id="chatInput" placeholder="Nhập thắc mắc môn học..." required class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-indigo-400">
                 <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 font-bold text-xs text-white rounded-xl transition-all">
@@ -718,13 +788,6 @@
             </select>
         </div>
 
-        <div>
-            <label class="block text-xs text-slate-400 mb-2 font-bold">CHỌN AVATAR MASCOT</label>
-            <div class="grid grid-cols-5 gap-3" id="avatarOptionsGrid">
-                <!-- Avatar items dynamically rendered -->
-            </div>
-        </div>
-
         <button onclick="saveProfile()" class="w-full py-3 cyber-button font-orbitron font-bold text-black rounded-xl shadow-lg">
             <i class="fa-solid fa-floppy-disk"></i> LƯU THAY ĐỔI
         </button>
@@ -788,13 +851,13 @@
         avatarSeed: "TeacherCyber",
         selectedGrade: "9",
         selectedSubject: "Toán Học",
-        ownedSkins: ["TeacherCyber", "RobotAI"],
+        equippedSkin: "TeacherCyber",
+        equippedFrame: "frame-diamond",
+        ownedSkins: ["TeacherCyber"],
+        ownedFrames: ["frame-diamond"],
         customQuestions: []
     };
 
-    /* ==========================================================================
-       2. CURRICULUM DATA: KẾT NỐI TRI THỨC (GRADES 6-12 x 8 SUBJECTS x 4 NODES)
-       ========================================================================== */
     const subjectsList = [
         { id: "Toán Học", icon: "fa-calculator", color: "text-cyan-400" },
         { id: "Vật Lý", icon: "fa-atom", color: "text-purple-400" },
@@ -807,25 +870,104 @@
     ];
 
     const curriculumPathNodes = [
-        { level: "EASY", title: "Cơ Bản & Nhận Biết", desc: "Nắm vững lý thuyết SGK", icon: "fa-seedling", xp: 50, coins: 30, unlocked: true },
-        { level: "MEDIUM", title: "Thông Hiểu & Áp Dụng", desc: "Giải bài tập SGK chuẩn", icon: "fa-book-open", xp: 100, coins: 50, unlocked: true },
-        { level: "HARD", title: "Vận Dụng Nâng Cao", desc: "Thử thách tư duy logic", icon: "fa-fire", xp: 150, coins: 80, unlocked: false },
-        { level: "BOSS", title: "TRÙM CỦA CHỦ ĐỀ", desc: "Chinh phục đỉnh cao môn học", icon: "fa-crown", xp: 300, coins: 200, unlocked: false }
+        { level: "EASY", title: "Chặng 1: Nhận Biết Cơ Bản", desc: "Lý thuyết nền tảng SGK", icon: "fa-seedling", xp: 50, coins: 30, unlocked: true },
+        { level: "MEDIUM", title: "Chặng 2: Thông Hiểu Định Luật", desc: "Bài tập áp dụng cơ bản", icon: "fa-book-open", xp: 100, coins: 50, unlocked: true },
+        { level: "HARD", title: "Chặng 3: Vận Dụng Công Thức", desc: "Giải bài tập nâng cao", icon: "fa-fire", xp: 150, coins: 80, unlocked: true },
+        { level: "EXPERT", title: "Chặng 4: Tư Duy Lô-gic", desc: "Thử thách suy luận phức hợp", icon: "fa-brain", xp: 200, coins: 120, unlocked: true },
+        { level: "MASTER", title: "Chặng 5: Chinh Phục Thực Tiễn", desc: "Ứng dụng vào cuộc sống", icon: "fa-globe", xp: 250, coins: 150, unlocked: true },
+        { level: "BOSS", title: "CHẶNG CUỐI: TRÙM TRI THỨC", desc: "Kiểm tra tổng hợp đỉnh cao", icon: "fa-crown", xp: 500, coins: 300, unlocked: true }
+    ];
+
+    const shopSkins = [
+        { id: "TeacherCyber", name: "Thầy Cyber Mặc Định", price: 0, seed: "TeacherCyber", desc: "Mascot cơ bản chuẩn Cyberpunk." },
+        { id: "GeniusStudent", name: "Nữ Sinh Thiên Tài", price: 500, seed: "GeniusStudent", desc: "Tăng 10% tốc độ tích lũy Xu." },
+        { id: "RobotAI", name: "Robot AI Kết Nối", price: 800, seed: "RobotAI", desc: "Trợ lý giải bài siêu tốc độ cao." },
+        { id: "CyberNinja", name: "Ninja Toán Học", price: 1200, seed: "CyberNinja", desc: "Ngoại trang độc quyền mùa giải 2026." }
+    ];
+
+    const shopFrames = [
+        { id: "frame-diamond", name: "Khung Kim Cương Xanh", price: 0, cssClass: "frame-diamond", desc: "Ánh sáng neon xanh đặc trưng." },
+        { id: "frame-platinum", name: "Khung Bạch Kim Tím", price: 600, cssClass: "frame-platinum", desc: "Hào quang tím huyền bí." },
+        { id: "frame-mythic", name: "Khung Thần Thoại Vàng", price: 1500, cssClass: "frame-mythic", desc: "Vầng hào quang vàng tối thượng." }
     ];
 
     /* ==========================================================================
-       3. EXPANDED QUESTION BANK (KẾT NỐI TRI THỨC)
+       NGÂN HÀNG CÂU HỎI MỞ RỘNG (10 CÂU CHO MỖI MÔN HỌC)
        ========================================================================== */
     const fullQuestionBank = [
-        // Toán Học Lớp 9 - Kết Nối Tri Thức
+        /* --- TOÁN HỌC --- */
         {
             grade: "9", subject: "Toán Học",
             question: "Trong SGK Toán 9 (Kết Nối Tri Thức), nghiệm của phương trình $x^2 - 5x + 6 = 0$ là gì?",
             options: ["x = 1 hoặc x = 6", "x = 2 hoặc x = 3", "x = -2 hoặc x = -3", "x = 0"],
             answer: 1,
-            explanation: "Phân tích $(x-2)(x-3) = 0 \\Leftrightarrow x=2$ hoặc $x=3$."
+            explanation: "Phân tích đa thức thành nhân tử: $(x-2)(x-3) = 0 \\Leftrightarrow x=2$ hoặc $x=3$."
         },
-        // Vật Lý Lớp 9
+        {
+            grade: "9", subject: "Toán Học",
+            question: "Căn bậc hai số học của 81 trong chương trình Toán 9 là:",
+            options: ["-9", "9", "±9", "81"],
+            answer: 1,
+            explanation: "Căn bậc hai số học của một số không âm a là số không âm x sao cho $x^2 = a$. Vậy $\\sqrt{81} = 9$."
+        },
+        {
+            grade: "9", subject: "Toán Học",
+            question: "Hệ phương trình bậc nhất hai ẩn $\\begin{cases} x + y = 3 \\\\ x - y = 1 \\end{cases}$ có nghiệm là:",
+            options: ["(2; 1)", "(1; 2)", "(3; 0)", "(0; 3)"],
+            answer: 0,
+            explanation: "Cộng vế với vế ta được $2x = 4 \\Leftrightarrow x = 2$, suy ra $y = 1$."
+        },
+        {
+            grade: "9", subject: "Toán Học",
+            question: "Cho hàm số bậc nhất $y = ax + b$ ($a \\neq 0$). Hàm số đồng biến trên R khi nào?",
+            options: ["a > 0", "a < 0", "a = 0", "a ≠ 0"],
+            answer: 0,
+            explanation: "Hàm số bậc nhất đồng biến khi hệ số góc a > 0 và nghịch biến khi a < 0."
+        },
+        {
+            grade: "9", subject: "Toán Học",
+            question: "Đồ thị của hàm số $y = ax^2$ ($a \\neq 0$) là hình gì?",
+            options: ["Đường thẳng", "Đường tròn", "Một đường Parabol đỉnh O", "Góc vuông"],
+            answer: 2,
+            explanation: "Đồ thị hàm số bậc hai $y = ax^2$ luôn là một đường Parabol đi qua gốc tọa độ O."
+        },
+        {
+            grade: "9", subject: "Toán Học",
+            question: "Cho tam giác ABC vuông tại A, đường cao AH. Hệ thức nào sau đây đúng?",
+            options: ["$AB^2 = BH \\cdot BC$", "$AH^2 = HB \\cdot HC$", "$AC^2 = HC \\cdot BC$", "Cả 3 đáp án trên đều đúng"],
+            answer: 3,
+            explanation: "Các hệ thức lượng trong tam giác vuông đều được học chuẩn trong SGK Toán 9 Kết Nối Tri Thức."
+        },
+        {
+            grade: "9", subject: "Toán Học",
+            question: "Thể tích của hình trụ có bán kính đáy R và chiều cao h tính bằng công thức:",
+            options: ["$V = \\pi R^2 h$", "$V = \\frac{1}{3} \\pi R^2 h$", "$V = 2\\pi R h$", "$V = \\frac{4}{3}\\pi R^3$"],
+            answer: 0,
+            explanation: "Thể tích hình trụ bằng diện tích đáy nhân với chiều cao: $V = \\pi R^2 h$."
+        },
+        {
+            grade: "9", subject: "Toán Học",
+            question: "Số nghiệm của phương trình bậc hai $ax^2 + bx + c = 0$ ($a \\neq 0$) phụ thuộc vào dấu của đại lượng nào?",
+            options: ["Delta (Δ = b² - 4ac)", "Tổng S", "Tích P", "Hệ số a"],
+            answer: 0,
+            explanation: "Số nghiệm phương trình bậc hai quyết định bởi biệt thức Delta: Δ > 0 (2 nghiệm), Δ = 0 (nghiệm kép), Δ < 0 (vô nghiệm)."
+        },
+        {
+            grade: "9", subject: "Toán Học",
+            question: "Cho đường tròn (O; R). Góc ở tâm có số đo bằng gì so với số đo cung bị chắn?",
+            options: ["Bằng số đo cung bị chắn", "Bằng nửa số đo cung bị chắn", "Gấp đôi số đo cung bị chắn", "Bằng 90 độ"],
+            answer: 0,
+            explanation: "Theo SGK Hình học 9, góc ở tâm có số đo bằng số đo cung bị chắn."
+        },
+        {
+            grade: "9", subject: "Toán Học",
+            question: "Xác suất của một biến cố ngẫu nhiên trong một trò chơi gieo xúc xắc cân đối có giá trị nằm trong khoảng nào?",
+            options: ["Từ 0 đến 1", "Từ -1 đến 1", "Từ 0 đến 100", "Lớn hơn 1"],
+            answer: 0,
+            explanation: "Xác suất của mọi biến cố luôn là một số thực thuộc đoạn [0; 1]."
+        },
+
+        /* --- VẬT LÝ --- */
         {
             grade: "9", subject: "Vật Lý",
             question: "Theo định luật Ôm (Vật Lý 9 - KNTT), cường độ dòng điện chạy qua dây dẫn phụ thuộc như thế nào vào hiệu điện thế?",
@@ -833,7 +975,71 @@
             answer: 0,
             explanation: "Định luật Ôm: $I = U/R$, vậy I tỉ lệ thuận với U."
         },
-        // Hóa Học Lớp 9
+        {
+            grade: "9", subject: "Vật Lý",
+            question: "Công thức tính điện trở của một dây dẫn hình trụ đồng chất là:",
+            options: ["$R = \\rho \\frac{l}{S}$", "$R = \\rho \\frac{S}{l}$", "$R = \\frac{l}{\\rho S}$", "$R = \\frac{U}{I}$"],
+            answer: 0,
+            explanation: "Công thức điện trở: $R = \\rho \\frac{l}{S}$ với $\\rho$ là điện trở suất."
+        },
+        {
+            grade: "9", subject: "Vật Lý",
+            question: "Công suất điện của đoạn mạch được tính bằng công thức nào?",
+            options: ["P = U.I", "P = U/I", "P = I²R", "Cả A và C đều đúng"],
+            answer: 3,
+            explanation: "Công suất tiêu thụ điện năng tính bởi P = U.I = I²R = U²/R."
+        },
+        {
+            grade: "9", subject: "Vật Lý",
+            question: "Quy tắc nắm tay phải dùng để xác định điều gì?",
+            options: ["Chiều dòng điện", "Chiều đường sức từ của ống dây có dòng điện chạy qua", "Chiều lực từ", "Cực của nam châm vĩnh cửu"],
+            answer: 1,
+            explanation: "Quy tắc nắm tay phải xác định chiều từ trường trong lòng ống dây có dòng điện."
+        },
+        {
+            grade: "9", subject: "Vật Lý",
+            question: "Hiện tượng cảm ứng điện từ xuất hiện khi nào?",
+            options: ["Khi số đường sức từ xuyên qua tiết diện cuộn dây biến thiên", "Khi nam châm đứng yên", "Khi có dòng điện không đổi qua mạch", "Khi đặt nam châm gần bóng đèn"],
+            answer: 0,
+            explanation: "Dòng điện cảm ứng xuất hiện khi từ thông qua mạch kín biến thiên."
+        },
+        {
+            grade: "9", subject: "Vật Lý",
+            question: "Dòng điện xoay chiều có đặc điểm gì khác biệt so với dòng điện một chiều?",
+            options: ["Chiều đổi liên tục theo thời gian", "Cường độ không đổi", "Chỉ chạy theo một hướng", "Không gây ra tác dụng nhiệt"],
+            answer: 0,
+            explanation: "Dòng điện xoay chiều là dòng điện có chiều và cường độ thay đổi tuần hoàn theo thời gian."
+        },
+        {
+            grade: "9", subject: "Vật Lý",
+            question: "Máy phát điện xoay chiều hoạt động dựa trên hiện tượng vật lý nào?",
+            options: ["Cảm ứng điện từ", "Tác dụng từ của dòng điện", "Tác dụng nhiệt", "Hiện tượng quang điện"],
+            answer: 0,
+            explanation: "Cả máy phát điện xoay chiều và động cơ đều ứng dụng hiện tượng cảm ứng điện từ."
+        },
+        {
+            grade: "9", subject: "Vật Lý",
+            question: "Thấu kính lồi (thấu kính hội tụ) có đặc điểm gì về phần rìa và phần giữa?",
+            options: ["Phần rìa mỏng hơn phần giữa", "Phần rìa dày hơn phần giữa", "Dày đều các phía", "Mỏng đều các phía"],
+            answer: 0,
+            explanation: "Thấu kính hội tụ là thấu kính rìa mỏng, thấu kính phân kì là thấu kính rìa dày."
+        },
+        {
+            grade: "9", subject: "Vật Lý",
+            question: "Ảnh của một vật tạo bởi thấu kính phân kì luôn có tính chất gì?",
+            options: ["Ảnh thật, ngược chiều", "Ảnh ảo, cùng chiều, nhỏ hơn vật", "Ảnh ảo, lớn hơn vật", "Ảnh thật, cùng chiều"],
+            answer: 1,
+            explanation: "Thấu kính phân kì luôn cho ảnh ảo nhỏ hơn vật đối với mọi vị trí đặt vật."
+        },
+        {
+            grade: "9", subject: "Vật Lý",
+            question: "Bộ phận chính của mắt gồm những gì về mặt quang học?",
+            options: ["Thể thủy tinh và màng lưới (võng mạc)", "Giác mạc và con ngươi", "Thấu kính hội tụ và gương cầu", "Lăng kính và màn chắn"],
+            answer: 0,
+            explanation: "Thể thủy tinh đóng vai trò như một thấu kính hội tụ, võng mạc đóng vai trò như màn ảnh."
+        },
+
+        /* --- HÓA HỌC --- */
         {
             grade: "9", subject: "Hóa Học",
             question: "Dung dịch làm quỳ tím hóa đỏ trong SGK Hóa Học Kết Nối Tri Thức là:",
@@ -841,26 +1047,433 @@
             answer: 0,
             explanation: "Axit làm quỳ tím chuyển sang màu đỏ, Bazo làm quỳ tím hóa xanh."
         },
-        // Tiếng Anh Lớp 9
+        {
+            grade: "9", subject: "Hóa Học",
+            question: "Kim loại nào sau đây tác dụng được với dung dịch HCl giải phóng khí Hidro?",
+            options: ["Đồng (Cu)", "Kẽm (Zn)", "Bạc (Ag)", "Vàng (Au)"],
+            answer: 1,
+            explanation: "Các kim loại đứng trước Hidro trong dãy hoạt động hóa học (như Zn, Fe, Al) tác dụng với axit mạnh sinh ra khí H2."
+        },
+        {
+            grade: "9", subject: "Hóa Học",
+            question: "Phản ứng giữa axit và bazơ tạo thành muối và chất gì?",
+            options: ["Nước (H2O)", "Khí CO2", "Khí O2", "Kim loại"],
+            answer: 0,
+            explanation: "Phản ứng trung hòa: Axit + Bazơ → Muối + Nước."
+        },
+        {
+            grade: "9", subject: "Hóa Học",
+            question: "Dãy hoạt động hóa học của kim loại nào sau đây sắp xếp đúng theo chiều giảm dần mức độ hoạt động?",
+            options: ["K, Na, Mg, Al, Zn, Fe, Pb, (H), Cu, Ag, Au", "Cu, Ag, Au, Fe, Zn, Al, Na, K", "Al, Mg, Na, K, Fe, Cu", "Au, Ag, Cu, Pb, Fe, Zn, Al, Mg, Na, K"],
+            answer: 0,
+            explanation: "Dãy hoạt động hóa học chuẩn trong SGK Hóa học bắt đầu từ Kali (K) mạnh nhất đến Vàng (Au) yếu nhất."
+        },
+        {
+            grade: "9", subject: "Hóa Học",
+            question: "Oxi hóa hoàn toàn kim loại nhôm (Al) trong khí oxi dư thu được chất có công thức hóa học là:",
+            options: ["Al2O3", "AlO", "Al3O2", "Al(OH)3"],
+            answer: 0,
+            explanation: "Nhôm cháy trong oxi tạo ra nhôm oxit Al2O3."
+        },
+        {
+            grade: "9", subject: "Hóa Học",
+            question: "Phi kim nào ở thể lỏng ở điều kiện thường?",
+            options: ["Brom (Br2)", "Clo (Cl2)", "Iot (I2)", "Flo (F2)"],
+            answer: 0,
+            explanation: "Brom là phi kim duy nhất tồn tại ở trạng thái lỏng ở nhiệt độ phòng."
+        },
+        {
+            grade: "9", subject: "Hóa Học",
+            question: "Thành phần chính của khí thiên nhiên là gì?",
+            options: ["Metan (CH4)", "Etilen (C2H4)", "Axetilen (C2H2)", "Cacbon monoxit (CO)"],
+            answer: 0,
+            explanation: "Khí thiên nhiên và khí mỏ dầu có thành phần chính là khí Metan CH4."
+        },
+        {
+            grade: "9", subject: "Hóa Học",
+            question: "Chất hữu cơ nào làm mất màu dung dịch brom?",
+            options: ["Metan (CH4)", "Etilen (C2H4)", "Etan (C2H6)", "Cacbon dioxit (CO2)"],
+            answer: 1,
+            explanation: "Các hiđrocacbon không no có liên kết đôi như Etilen dễ dàng làm mất màu nước brom."
+        },
+        {
+            grade: "9", subject: "Hóa Học",
+            question: "Rượu etylic (Ethanol) có công thức cấu tạo thu gọn là:",
+            options: ["CH3-CH2-OH", "CH3-O-CH3", "CH3-COOH", "HCHO"],
+            answer: 0,
+            explanation: "Công thức hóa học của rượu etylic là C2H5OH hay viết gọn là CH3-CH2-OH."
+        },
+        {
+            grade: "9", subject: "Hóa Học",
+            question: "Axit axetic (Giấm ăn) có nhóm chức đặc trưng nào trong phân tử?",
+            options: ["Nhóm cacboxyl (-COOH)", "Nhóm hiđroxyl (-OH)", "Nhóm amin (-NH2)", "Nhóm cacbonyl (-CO-)"],
+            answer: 0,
+            explanation: "Axit axetic thuộc nhóm axit cacboxylic, đặc trưng bởi nhóm -COOH."
+        },
+
+        /* --- SINH HỌC --- */
+        {
+            grade: "9", subject: "Sinh Học",
+            question: "Đơn vị cấu trúc và chức năng cơ bản của mọi sinh vật trong Sinh học là gì?",
+            options: ["Mô", "Cơ quan", "Tế bào", "Hệ cơ quan"],
+            answer: 2,
+            explanation: "Tế bào là đơn vị cơ bản cấu tạo nên sự sống."
+        },
+        {
+            grade: "9", subject: "Sinh Học",
+            question: "Vật chất di truyền chủ yếu ở cấp độ tế bào nhân thực nằm ở đâu?",
+            options: ["Tế bào chất", "Nhân tế bào (ADN)", "Ribosome", "Màng sinh chất"],
+            answer: 1,
+            explanation: "Nhân tế bào chứa ADN là trung tâm lưu trữ thông tin di truyền."
+        },
+        {
+            grade: "9", subject: "Sinh Học",
+            question: "Quy luật phân li của Menđen khẳng định điều gì?",
+            options: ["Các nhân tố di truyền trong cặp nhân tố di truyền không hòa trộn vào nhau", "Các tính trạng luôn di truyền liên kết", "Đột biến gen diễn ra theo ý muốn", "ADN tự nhân đôi nhờ enzim"],
+            answer: 0,
+            explanation: "Nội dung quy luật phân li: Mỗi tính trạng do một cặp nhân tố di truyền quy định, khi giảm phân chúng phân li đồng đều về các giao tử."
+        },
+        {
+            grade: "9", subject: "Sinh Học",
+            question: "Phân tử ADN có cấu trúc không gian như thế nào?",
+            options: ["Mạch đơn thẳng", "Chuỗi kép xoắn lò xo ngược chiều nhau", "Mạch vòng đơn", "Cấu trúc mạng lưới không gian"],
+            answer: 1,
+            explanation: "Mô hình cấu trúc ADN của Watson - Crick là chuỗi xoắn kép gồm 2 mạch song song ngược chiều."
+        },
+        {
+            grade: "9", subject: "Sinh Học",
+            question: "Quá trình tổng hợp ARN trên khuôn mẫu ADN được gọi là:",
+            options: ["Phiên mã (Transcription)", "Dịch mã (Translation)", "Nhân đôi (Replication)", "Đột biến"],
+            answer: 0,
+            explanation: "Phiên mã là quá trình truyền đạt thông tin di truyền từ ADN sang mARN."
+        },
+        {
+            grade: "9", subject: "Sinh Học",
+            question: "Đột biến cấu trúc nhiễm sắc thể bao gồm các dạng nào?",
+            options: ["Mất đoạn, lặp đoạn, đảo đoạn, chuyển đoạn", "Thêm 1 cặp nucleotit", "Thay thế cặp nucleotit", "Đột biến điểm"],
+            answer: 0,
+            explanation: "Các dạng đột biến cấu trúc NST gồm mất đoạn, lặp đoạn, đảo đoạn và chuyển đoạn."
+        },
+        {
+            grade: "9", subject: "Sinh Học",
+            question: "Hệ sinh thái gồm những thành phần chủ yếu nào?",
+            options: ["Quần xã sinh vật và sinh cảnh (môi trường vô sinh)", "Chỉ có thực vật và động vật", "Các vi sinh vật phân giải", "Nước, không khí và đất đá"],
+            answer: 0,
+            explanation: "Hệ sinh thái = Quần xã sinh vật + Môi trường vô sinh (sinh cảnh)."
+        },
+        {
+            grade: "9", subject: "Sinh Học",
+            question: "Chuỗi thức ăn trong hệ sinh thái thường khởi đầu bằng sinh vật nào?",
+            options: ["Sinh vật sản xuất (Thực vật, tảo)", "Động vật ăn thịt đầu bảng", "Vi sinh vật phân hủy", "Động vật ăn tạp"],
+            answer: 0,
+            explanation: "Mọi chuỗi thức ăn đều bắt đầu bằng sinh vật sản xuất quang hợp."
+        },
+        {
+            grade: "9", subject: "Sinh Học",
+            question: "Hiện tượng thoái hóa giống ở thực vật và động vật tự thụ phấn/nội phối thường dẫn đến điều gì?",
+            options: ["Con lai xuất hiện các gen lặn có hại biểu hiện ra kiểu hình xấu", "Sức sống tăng lên vượt trội", "Hình thành loài mới ngay lập tức", "Không thay đổi đặc tính"],
+            answer: 0,
+            explanation: "Giao phối cận huyết và tự thụ phấn liên tục làm tăng tỉ lệ đồng hợp tử, các gen lặn có hại có cơ hội biểu hiện."
+        },
+        {
+            grade: "9", subject: "Sinh Học",
+            question: "Công nghệ tế bào có ưu điểm gì nổi bật trong nông nghiệp hiện đại?",
+            options: ["Nhân nhanh giống cây trồng vật nuôi sạch bệnh, năng suất cao trong thời gian ngắn", "Làm thay đổi khí hậu trái đất", "Tạo ra giống thú ăn thịt khổng lồ", "Loại bỏ hoàn toàn sâu bệnh tự nhiên"],
+            answer: 0,
+            explanation: "Nuôi cấy mô tế bào giúp nhân giống vô tính nhanh chóng các giống quý hiếm."
+        },
+
+        /* --- TIẾNG ANH --- */
         {
             grade: "9", subject: "Tiếng Anh",
-            question: "Unit 1 English 9 (Global Success / KNTT): Choose the word with a different stress pattern:",
-            options: ["artisan", "craftsman", "workshop", "attract"],
-            answer: 3,
-            explanation: "'Attract' has stress on 2nd syllable, others on 1st syllable."
+            question: "My village is famous ________ traditional pottery making.",
+            options: ["for", "with", "in", "on"],
+            answer: 0,
+            explanation: "Cấu trúc 'famous for' có nghĩa là nổi tiếng về cái gì."
         },
-        // Tin Học Lớp 9
+        {
+            grade: "9", subject: "Tiếng Anh",
+            question: "If I _____ enough money, I would buy a new laptop for online learning.",
+            options: ["have", "had", "will have", "has"],
+            answer: 1,
+            explanation: "Câu điều kiện loại 2 dùng thì quá khứ đơn ở mệnh đề IF: If + S + V2/ed, S + would/could + V_bare."
+        },
+        {
+            grade: "9", subject: "Tiếng Anh",
+            question: "Sheh suggested ________ to the art museum this weekend.",
+            options: ["go", "to go", "going", "goes"],
+            answer: 2,
+            explanation: "Sau động từ 'suggest' là danh động từ (V-ing)."
+        },
+        {
+            grade: "9", subject: "Tiếng Anh",
+            question: "English ________ in many countries around the world as an official language.",
+            options: ["is speaking", "is spoken", "speaks", "spoke"],
+            answer: 1,
+            explanation: "Cấu trúc câu bị động ở thì hiện tại đơn: S + am/is/are + V3/ed."
+        },
+        {
+            grade: "9", subject: "Tiếng Anh",
+            question: "Namh is tired this morning ________ he stayed up late watching football match.",
+            options: ["because", "although", "so", "but"],
+            answer: 0,
+            explanation: "Dùng 'because' để chỉ nguyên nhân (vì anh ấy thức khuya)."
+        },
+        {
+            grade: "9", subject: "Tiếng Anh",
+            question: "The ao dai is the ________ dress of Vietnamese women.",
+            options: ["traditional", "modern", "foreign", "casual"],
+            answer: 0,
+            explanation: "Áo dài là trang phục truyền thống ('traditional dress') của phụ nữ Việt Nam."
+        },
+        {
+            grade: "9", subject: "Tiếng Anh",
+            question: "Choose the word whose underlined part is pronounced differently: *m**a**ke, *h**a**te, *f**a**ce, h**a**vit*.",
+            options: ["make", "hate", "face", "have"],
+            answer: 3,
+            explanation: "Từ 'have' phát âm là /æ/, các từ còn lại phát âm là /eɪ/."
+        },
+        {
+            grade: "9", subject: "Tiếng Anh",
+            question: "We should turn off all electrical appliances before leaving home to save ________.",
+            options: ["energy", "water", "food", "money"],
+            answer: 0,
+            explanation: "Tắt thiết bị điện giúp tiết kiệm năng lượng ('save energy')."
+        },
+        {
+            grade: "9", subject: "Tiếng Anh",
+            question: "The Internet is a wonderful invention of modern life, ________ it also has some risks.",
+            options: ["however", "although", "because", "therefore"],
+            answer: 0,
+            explanation: "Dùng 'however' (tuy nhiên) đứng sau dấu chấm phẩy hoặc dấu phẩy để diễn tả ý tương phản."
+        },
+        {
+            grade: "9", subject: "Tiếng Anh",
+            question: "Lan wishes she ________ speak English as fluently as a native speaker.",
+            options: ["can", "could", "will", "may"],
+            answer: 1,
+            explanation: "Câu ước cho tương lai hoặc hiện tượng không có thật ở hiện tại dùng 'could' trong mệnh đề sau wish."
+        },
+
+        /* --- NGỮ VĂN --- */
+        {
+            grade: "9", subject: "Ngữ Văn",
+            question: "Trong chương trình Ngữ Văn 9 (KNTT), đoạn trích 'Kiều ở lầu Ngưng Bích' thuộc tác phẩm nào?",
+            options: ["Truyện Kiều (Nguyễn Du)", "Lục Vân Tiên (Nguyễn Đình Chiểu)", "Chinh phụ ngâm khúc", "Cung oán ngâm khúc"],
+            answer: 0,
+            explanation: "'Kiều ở lầu Ngưng Bích' là đoạn trích nổi tiếng trong kiệt tác Truyện Kiều của Nguyễn Du."
+        },
+        {
+            grade: "9", subject: "Ngữ Văn",
+            question: "Tác phẩm 'Lặng lẽ Sa Pa' của nhà văn Nguyễn Thành Long thuộc thể loại gì?",
+            options: ["Truyện ngắn", "Thơ tự do", "Kịch bản văn học", "Hồi ký"],
+            answer: 0,
+            explanation: "'Lặng lẽ Sa Pa' là một truyện ngắn xuất sắc khắc họa vẻ đẹp người lao động thầm lặng."
+        },
+        {
+            grade: "9", subject: "Ngữ Văn",
+            question: "Trong bài thơ 'Đồng chí' của Chính Hữu, hình ảnh 'Áo anh rách vai / Quân tôi có vá' gợi lên điều gì?",
+            options: ["Sự thiếu thốn, gian khổ của cuộc đời người lính kháng chiến chống Pháp", "Sự giàu có của bộ đội", "Tình cảm gia đình xa cách", "Sự bất hòa trong đơn vị"],
+            answer: 0,
+            explanation: "Chi tiết chân thực, dung dị nói lên những gian lao thiếu thốn buổi đầu kháng chiến."
+        },
+        {
+            grade: "9", subject: "Ngữ Văn",
+            question: "Phương châm hội thoại nào khuyên chúng ta khi giao tiếp phải nói đúng vào đề tài giao tiếp, tránh nói lan man?",
+            options: ["Phương châm về chất", "Phương châm quan hệ", "Phương châm cách thức", "Phương châm lịch sự"],
+            answer: 1,
+            explanation: "Phương châm quan hệ yêu cầu nói đúng đề tài giao tiếp (đúng trọng tâm)."
+        },
+        {
+            grade: "9", subject: "Ngữ Văn",
+            question: "Tác giả của bài thơ 'Mùa xuân chín' là ai?",
+            options: ["Hàn Mặc Tử", "Xuân Diệu", "Tố Hữu", "Huy Cận"],
+            answer: 0,
+            explanation: "'Mùa xuân chín' là bài thơ trữ tình tiêu biểu của nhà thơ tài hoa Hàn Mặc Tử."
+        },
+        {
+            grade: "9", subject: "Ngữ Văn",
+            question: "Biện pháp tu từ nào được sử dụng chủ yếu trong câu thơ: 'Ngày ngày mặt trời đi qua trên lăng / Thấy một mặt trời trong lăng rất đỏ' (Viếng lăng Bác)?",
+            options: ["Ẩn dụ", "So sánh", "Nói quá", "Liệt kê"],
+            answer: 0,
+            explanation: "Hình ảnh 'mặt trời trong lăng' là hình ảnh ẩn dụ sâu sắc chỉ Bác Hồ kính yêu."
+        },
+        {
+            grade: "9", subject: "Ngữ Văn",
+            question: "Truyện ngắn 'Chiếc lược ngã' của nhà văn Nguyễn Quang Sáng lấy bối cảnh ở đâu?",
+            options: ["Miền Nam trong thời kỳ kháng chiến chống Mỹ", "Miền Bắc thời kỳ xây dựng chủ nghĩa xã hội", "Hà Nội trong những ngày toàn quốc kháng chiến", "Tây Nguyên đại ngàn"],
+            answer: 0,
+            explanation: "Truyện khắc họa cảm động tình cha con sâu nặng trong hoàn cảnh chiến tranh ác liệt ở Nam Bộ."
+        },
+        {
+            grade: "9", subject: "Ngữ Văn",
+            question: "Tác phẩm 'Bếp lửa' của nhà văn/thơ nào viết về tình cảm bà cháu sâu nặng?",
+            options: ["Bằng Việt", "Tố Hữu", "Lưu Quang Vũ", "Xuân Quỳnh"],
+            answer: 0,
+            explanation: "Bài thơ 'Bếp lửa' do Bằng Việt sáng tác năm 1963 khi đang du học ở Liên Xô."
+        },
+        {
+            grade: "9", subject: "Ngữ Văn",
+            question: "Thơ bốn chữ, năm chữ hay thơ tự do khác với thơ lục bát ở điểm nào cơ bản nhất?",
+            options: ["Không tuân thủ chặt chẽ quy luật số tiếng, vần điệu như thể lục bát truyền thống", "Không có nhạc điệu", "Không có cảm xúc", "Không bao giờ có vần"],
+            answer: 0,
+            explanation: "Các thể thơ hiện đại linh hoạt hơn về nhịp điệu và số tiếng trong dòng thơ."
+        },
+        {
+            grade: "9", subject: "Ngữ Văn",
+            question: "Nghị luận xã hội về một tư thế, đạo lý sống thường bàn về vấn đề gì?",
+            options: ["Các vấn đề về tư tưởng, đạo đức, lối sống và quan niệm nhân sinh", "Giải bài tập toán học phức tạp", "Chứng minh định lý vật lý", "Phân tích cấu trúc ngữ pháp"],
+            answer: 0,
+            explanation: "Nghị luận về một tư tưởng đạo lý bàn về các chuẩn mực đạo đức và nhân cách con người."
+        },
+
+        /* --- LỊCH SỬ & ĐỊA LÝ --- */
+        {
+            grade: "9", subject: "Lịch Sử & Địa Lý",
+            question: "Trong SGK Lịch Sử & Địa Lý 9 (Kết Nối Tri Thức), vùng kinh tế nào của nước ta có quy mô nền kinh tế lớn nhất hiện nay?",
+            options: ["Đông Nam Bộ", "Đồng bằng sông Hồng", "Trung du và miền núi Bắc Bộ", "Đồng bằng sông Cửu Long"],
+            answer: 0,
+            explanation: "Đông Nam Bộ là đầu tàu kinh tế, trung tâm công nghiệp và dịch vụ lớn nhất cả nước."
+        },
+        {
+            grade: "9", subject: "Lịch Sử & Địa Lý",
+            question: "Tổ chức ASEAN được thành lập vào năm nào và tại đâu?",
+            options: ["Năm 1967 tại Băng-cốc (Thái Lan)", "Năm 1995 tại Hà Nội (Việt Nam)", "Năm 1945 tại In-đô-nê-xi-a", "Năm 1999 tại Ma-ni-la"],
+            answer: 0,
+            explanation: "Hiệp hội các quốc gia Đông Nam Á (ASEAN) thành lập ngày 8/8/1967 tại Bangkok."
+        },
+        {
+            grade: "9", subject: "Lịch Sử & Địa Lý",
+            question: "Sự kiện nào đánh dấu chiến tranh thế giới thứ hai kết thúc hoàn toàn trên toàn cầu năm 1945?",
+            options: ["Quân phiệt Nhật ký văn kiện đầu hàng không điều kiện (9/1945)", "Đức đầu hàng Đồng minh", "Mỹ ném bom nguyên tử xuống Nhật", "Pháp tái chiếm Đông Dương"],
+            answer: 0,
+            explanation: "Nhật ký hàng đầu hàng chính thức vào tháng 9/1945 chấm dứt hoàn toàn Thế chiến II."
+        },
+        {
+            grade: "9", subject: "Lịch Sử & Địa Lý",
+            question: "Ngành công nghiệp nào được xem là mũi nhọn của vùng Đồng bằng sông Hồng?",
+            options: ["Công nghiệp điện tử, cơ khí chính xác, công nghệ cao", "Khai thác dầu khí ngoài khơi", "Trồng cây công nghiệp lâu năm", "Đánh bắt xa bờ"],
+            answer: 0,
+            explanation: "Đồng bằng sông Hồng quy tụ các trung tâm công nghiệp công nghệ cao hàng đầu miền Bắc."
+        },
+        {
+            grade: "9", subject: "Lịch Sử & Địa Lý",
+            question: "Tổ chức Liên Hợp Quốc (UN) chính thức được thành lập vào năm nào?",
+            options: ["1945", "1950", "1939", "1960"],
+            answer: 0,
+            explanation: "Liên Hợp Quốc thành lập tháng 10/1945 nhằm duy trì hòa bình và an ninh thế giới."
+        },
+        {
+            grade: "9", subject: "Lịch Sử & Địa Lý",
+            question: "Đặc điểm địa hình nổi bật của nước ta là gì?",
+            options: ["Đồi núi chiếm phần lớn diện tích nhưng chủ yếu là đồi núi thấp", "Bằng phẳng tuyệt đối", "Toàn bộ là cao nguyên bazan", "Địa hình lòng chảo sâu"],
+            answer: 0,
+            explanation: "Đồi núi nước ta chiếm 3/4 diện tích, chủ yếu là đồi núi thấp."
+        },
+        {
+            grade: "9", subject: "Lịch Sử & Địa Lý",
+            question: "Ý nghĩa lịch sử quan trọng nhất của Cách mạng tháng Tám năm 1945 ở Việt Nam là gì?",
+            options: ["Lập ra nước Việt Nam Dân chủ Cộng hòa, chấm dứt ách thống trị thực dân phong kiến", "Đưa nước ta thành nước công nghiệp phát triển", "Mở ra thời kỳ hội nhập WTO", "Hoàn thành thống nhất đất nước về mặt nhà nước"],
+            answer: 0,
+            explanation: "Cách mạng tháng Tám đập tan xiềng xích nô lệ, lập nên nhà nước công nông đầu tiên ở Đông Nam Á."
+        },
+        {
+            grade: "9", subject: "Lịch Sử & Địa Lý",
+            question: "Vùng Tây Nguyên có thế mạnh kinh tế đặc biệt nào để phát triển nông nghiệp hàng hóa lớn?",
+            options: ["Đất badan màu mỡ với các diện tích lớn thuận lợi trồng cây công nghiệp lâu năm (cà phê, cao su, hồ tiêu)", "Đất phù sa ngọt thuận lúa gạo", "Đất phèn mặn rộng lớn", "Khí hậu ôn đới quanh năm"],
+            answer: 0,
+            explanation: "Tây Nguyên nổi tiếng với các cao nguyên bazan bạt ngàn trồng cây công nghiệp."
+        },
+        {
+            grade: "9", subject: "Lịch Sử & Địa Lý",
+            question: "Hiệp định Giơ-ne-vơ về Đông Dương được ký kết vào năm nào?",
+            options: ["1954", "1945", "1973", "1975"],
+            answer: 0,
+            explanation: "Hiệp định Genève 1954 chấm dứt chiến tranh lập lại hòa bình ở Đông Dương, Pháp rút quân."
+        },
+        {
+            grade: "9", subject: "Lịch Sử & Địa Lý",
+            question: "Cảng biển nào là cảng biển lớn nhất của nước ta ở khu vực phía Nam?",
+            options: ["Cảng Sài Gòn (TP. Hồ Chí Minh)", "Cảng Hải Phòng", "Cảng Đà Nẵng", "Cảng Quy Nhơn"],
+            answer: 0,
+            explanation: "Hệ thống cảng biển TP. Hồ Chí Minh đóng vai trò là cửa ngõ quốc tế lớn nhất miền Nam."
+        },
+
+        /* --- TIN HỌC --- */
         {
             grade: "9", subject: "Tin Học",
-            question: "Thiết bị nào sau đây vừa là thiết bị vào vừa là thiết bị ra trong Tin Học KNTT?",
-            options: ["Màn hình cảm ứng", "Bàn phím", "Chuột", "Máy in"],
+            question: "Trong lập trình Python, câu lệnh nào dùng để in dữ liệu ra màn hình?",
+            options: ["print()", "input()", "scanf()", "echo()"],
             answer: 0,
-            explanation: "Màn hình cảm ứng vừa nhận thao tác vuốt chạm (vào) vừa hiển thị hình ảnh (ra)."
+            explanation: "Hàm print() trong Python dùng để xuất dữ liệu ra màn hình console."
+        },
+        {
+            grade: "9", subject: "Tin Học",
+            question: "Kiểu dữ liệu nào trong Python dùng để lưu trữ các số nguyên?",
+            options: ["int", "float", "str", "bool"],
+            answer: 0,
+            explanation: "Kiểu int (integer) biểu diễn số nguyên trong Python."
+        },
+        {
+            grade: "9", subject: "Tin Học",
+            question: "Cấu trúc lặp với số lần biết trước trong Python được thể hiện bằng từ khóa nào?",
+            options: ["for", "while", "if-else", "def"],
+            answer: 0,
+            explanation: "Lệnh for dùng để lặp với số lần biết trước, lệnh while lặp với điều kiện."
+        },
+        {
+            grade: "9", subject: "Tin Học",
+            question: "Mạng máy tính là gì?",
+            options: ["Tập hợp các máy tính kết nối với nhau theo các quy ước truyền thông nhằm chia sẻ tài nguyên", "Một máy tính có nhiều màn hình", "Phần mềm diệt virus", "Hệ điều hành Windows"],
+            answer: 0,
+            explanation: "Mạng máy tính kết nối các thiết bị để chia sẻ dữ liệu, máy in, internet."
+        },
+        {
+            grade: "9", subject: "Tin Học",
+            question: "Đâu là một thiết bị mạng quan trọng dùng để kết nối các máy tính trong mạng LAN?",
+            options: ["Switch (Bộ chuyển mạch)", "Màn hình (Monitor)", "Bàn phím (Keyboard)", "Ổ cứng HDD"],
+            answer: 0,
+            explanation: "Switch và Router là các thiết bị cốt lõi trong xây dựng mạng cục bộ."
+        },
+        {
+            grade: "9", subject: "Tin Học",
+            question: "Trong cơ sở dữ liệu quan hệ, bảng (table) gồm các thành phần cơ bản nào?",
+            options: ["Các hàng (bản ghi) và các cột (trường)", "Chỉ có các ô trống", "Các biểu đồ hình tròn", "Các tệp văn bản Word"],
+            answer: 0,
+            explanation: "Cấu trúc bảng gồm các hàng lưu trữ dữ liệu bản ghi và các cột lưu trữ thuộc tính."
+        },
+        {
+            grade: "9", subject: "Tin Học",
+            question: "Hành vi nào vi phạm đạo đức và pháp luật khi sử dụng công nghệ thông tin?",
+            options: ["Phát tán mã độc, đánh cắp thông tin cá nhân và xâm nhập hệ thống trái phép", "Gõ văn bản", "Lập trình giải bài toán", "Tra cứu từ điển online"],
+            answer: 0,
+            explanation: "Tội phạm mạng và phá hoại dữ liệu là hành vi vi phạm nghiêm trọng pháp luật."
+        },
+        {
+            grade: "9", subject: "Tin Học",
+            question: "Thuật toán tìm kiếm tuần tự (Sequential Search) hoạt động như thế nào?",
+            options: ["Xét lần lượt từng phần tử từ đầu đến cuối danh sách", "Chỉ kiểm tra phần tử ở giữa", "Sắp xếp danh sách trước rồi mới tìm", "Không cần duyệt qua phần tử nào"],
+            answer: 0,
+            explanation: "Tìm kiếm tuần tự duyệt từ phần tử đầu tiên cho đến khi tìm thấy hoặc hết danh sách."
+        },
+        {
+            grade: "9", subject: "Tin Học",
+            question: "Phần mềm nào sau đây là hệ điều hành thông dụng cho máy tính cá nhân?",
+            options: ["Windows 11", "Microsoft Word", "Google Chrome", "Adobe Photoshop"],
+            answer: 0,
+            explanation: "Windows là hệ điều hành phổ biến quản lý phần cứng và phần mềm máy tính."
+        },
+        {
+            grade: "9", subject: "Tin Học",
+            question: "Trong Python, kết quả của phép toán `7 // 2` là bao nhiêu?",
+            options: ["3", "3.5", "4", "1"],
+            answer: 0,
+            explanation: "Phép toán `//` trong Python là phép chia lấy phần nguyên (7 chia 2 lấy phần nguyên là 3)."
         }
     ];
 
     /* ==========================================================================
-       4. AUDIO SYNTHESIZER
+       2. AUDIO & INITIALIZATION
        ========================================================================== */
     function playSound(type) {
         try {
@@ -889,9 +1502,6 @@
         } catch (e) {}
     }
 
-    /* ==========================================================================
-       5. INITIALIZATION & TAB CONTROLS
-       ========================================================================== */
     window.onload = function() {
         renderHomeSubjects();
         renderPathSubjectTabs();
@@ -924,13 +1534,14 @@
         document.getElementById('userStreak').innerText = `${userState.streak} Ngày`;
         document.getElementById('shopUserCoins').innerText = userState.coins.toLocaleString();
 
-        const avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${userState.avatarSeed}`;
+        const avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${userState.equippedSkin}`;
         document.getElementById('headerAvatar').src = avatarUrl;
         document.getElementById('playerSkinImg').src = avatarUrl;
         document.getElementById('cardAvatarImg').src = avatarUrl;
         document.getElementById('cardName').innerText = userState.name;
         document.getElementById('cardBadge').innerText = userState.badge;
         document.getElementById('cardRP').innerText = `${userState.rp} RP`;
+        document.getElementById('headerAvatar').parentElement.className = `relative rounded-full p-0.5 ${userState.equippedFrame}`;
     }
 
     function renderHomeSubjects() {
@@ -951,9 +1562,6 @@
         renderPathNodes();
     }
 
-    /* ==========================================================================
-       6. DUOLINGO-STYLE LEARNING PATH LOGIC
-       ========================================================================== */
     function renderPathSubjectTabs() {
         const container = document.getElementById('pathSubjectTabs');
         container.innerHTML = subjectsList.map(s => `
@@ -979,18 +1587,21 @@
         document.getElementById('pathTitle').innerText = `HÀNH TRÌNH CHINH PHỤC ${userState.selectedSubject.toUpperCase()}`;
 
         const container = document.getElementById('pathNodesContainer');
-        container.innerHTML = `<div class="path-line h-full top-0"></div>` + curriculumPathNodes.map((node, i) => {
+        const zigzagClasses = ['node-zigzag-1', 'node-zigzag-2', 'node-zigzag-3', 'node-zigzag-4', 'node-zigzag-5', 'node-zigzag-1'];
+
+        container.innerHTML = `<div class="path-line h-[95%] top-6"></div>` + curriculumPathNodes.map((node, i) => {
             const isBoss = node.level === "BOSS";
             const isUnlocked = node.unlocked;
+            const zigClass = zigzagClasses[i % zigzagClasses.length];
 
             return `
-                <div class="relative z-10 flex flex-col items-center group cursor-pointer" onclick="startPathLesson(${i})">
-                    <div class="w-16 h-16 rounded-full flex items-center justify-center font-bold text-xl shadow-xl transition-all duration-300 ${isBoss ? 'bg-yellow-500 text-black border-4 border-yellow-300 animate-pulse' : isUnlocked ? 'bg-cyan-500 text-black border-4 border-cyan-300 group-hover:scale-110' : 'bg-slate-800 text-slate-500 border-4 border-slate-700'}">
+                <div class="relative z-10 flex flex-col items-center group cursor-pointer ${zigClass}" onclick="startPathLesson(${i})">
+                    <div class="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center font-bold text-xl md:text-2xl shadow-xl transition-all duration-300 ${isBoss ? 'bg-gradient-to-tr from-yellow-500 to-amber-400 text-black border-4 border-yellow-200 animate-pulse-glow scale-110' : isUnlocked ? 'bg-gradient-to-tr from-cyan-400 to-teal-500 text-black border-4 border-cyan-200 group-hover:scale-110 shadow-cyan-500/50' : 'bg-slate-800 text-slate-500 border-4 border-slate-700 opacity-80'}">
                         <i class="fa-solid ${node.icon}"></i>
                     </div>
-                    <div class="mt-2 text-center bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-xl">
-                        <p class="text-xs font-bold text-white">${node.title}</p>
-                        <p class="text-[9px] text-cyan-400">+${node.xp} XP • +${node.coins} Xu</p>
+                    <div class="mt-2 text-center bg-slate-900/90 border border-slate-800 px-3 py-2 rounded-2xl shadow-lg max-w-[180px]">
+                        <p class="text-[11px] font-bold text-white leading-tight">${node.title}</p>
+                        <p class="text-[9px] text-cyan-400 mt-0.5 font-semibold">+${node.xp} XP • +${node.coins} Xu</p>
                     </div>
                 </div>
             `;
@@ -998,33 +1609,74 @@
     }
 
     function startPathLesson(nodeIndex) {
-        const node = curriculumPathNodes[nodeIndex];
+        switchTab('arena');
         document.getElementById('gamePlayArea').classList.remove('hidden');
-        document.getElementById('gameModeBadge').innerText = `${userState.selectedSubject} - ${node.title}`;
-        document.getElementById('versusBar').classList.add('hidden'); // Hide versus in solo mode
-        
-        loadQuestion(0);
-        switchTab('arena'); // Jump to canvas area
+        document.getElementById('powerUpsBar').classList.remove('hidden');
+        document.getElementById('quizizzLeaderboardModal').classList.add('hidden');
+        document.getElementById('gameModeBadge').innerText = `${userState.selectedSubject} - Chặng ${nodeIndex + 1}`;
+        document.getElementById('versusBar').classList.add('hidden');
+        startMatchEngine('path');
     }
 
     /* ==========================================================================
-       7. ARENA GAMEPLAY ENGINE
+       3. QUIZIZZ GAMEPLAY ENGINE & LIVE FEATURES
        ========================================================================== */
     let currentQIndex = 0;
     let playerScore = 0;
+    let opponentScore = 0;
     let timerInterval = null;
+    let streakCount = 0;
+    let activeGameMode = '1v1';
+    let quizizzPlayers = [
+        { name: "Học Sinh Bá Vương (Bạn)", score: 0 },
+        { name: "Nguyễn Văn An", score: 300 },
+        { name: "Trần Thị Bích", score: 250 },
+        { name: "Lê Hoàng Minh", score: 200 }
+    ];
 
     function startArenaMatch(mode) {
+        activeGameMode = mode;
+        switchTab('arena');
         document.getElementById('gamePlayArea').classList.remove('hidden');
-        document.getElementById('gameModeBadge').innerText = mode.toUpperCase() + " ARENA";
+        document.getElementById('powerUpsBar').classList.remove('hidden');
+        document.getElementById('quizizzLeaderboardModal').classList.add('hidden');
+        document.getElementById('gameModeBadge').innerText = mode.toUpperCase() + " ARENA REALTIME";
         document.getElementById('versusBar').classList.remove('hidden');
 
+        document.getElementById('opponentNameText').innerText = mode === 'survival' ? "Top 50 Sinh Tồn AI" : mode === '1v1' ? "Đối Thủ Rank Vàng" : "Đồng Đội Pro";
+        startMatchEngine(mode);
+    }
+
+    function startQuizizzLiveSession() {
+        activeGameMode = 'quizizzLive';
+        switchTab('arena');
+        document.getElementById('gamePlayArea').classList.remove('hidden');
+        document.getElementById('powerUpsBar').classList.remove('hidden');
+        document.getElementById('quizizzLeaderboardModal').classList.add('hidden');
+        document.getElementById('gameModeBadge').innerText = "QUIZIZZ LIVE HOST";
+        document.getElementById('versusBar').classList.add('hidden');
+        startMatchEngine('quizizzLive');
+    }
+
+    function startMatchEngine(mode) {
         currentQIndex = 0;
         playerScore = 0;
+        opponentScore = 0;
+        streakCount = 0;
+        updateStreakUI();
         document.getElementById('playerScore').innerText = '0';
         document.getElementById('opponentScore').innerText = '0';
-
         loadQuestion(0);
+    }
+
+    function updateStreakUI() {
+        const badge = document.getElementById('streakBadge');
+        if (streakCount >= 2) {
+            badge.classList.remove('hidden');
+            document.getElementById('streakMultiplier').innerText = streakCount >= 4 ? '3' : '2';
+        } else {
+            badge.classList.add('hidden');
+        }
     }
 
     function loadQuestion(index) {
@@ -1045,75 +1697,248 @@
 
         const optionsContainer = document.getElementById('answerOptionsGrid');
         optionsContainer.innerHTML = q.options.map((opt, i) => `
-            <button onclick="submitAnswer(${i})" class="cyber-glass p-3 rounded-xl border border-slate-700 hover:border-cyan-400 font-bold text-xs text-left text-slate-200 transition-all hover:translate-x-1">
-                <span class="text-cyan-400 mr-2">${String.fromCharCode(65 + i)}.</span> ${opt}
+            <button onclick="submitAnswer(${i})" class="cyber-glass p-3.5 rounded-xl border border-slate-700 hover:border-cyan-400 font-bold text-xs text-left text-slate-200 transition-all hover:translate-x-1 flex items-center gap-3">
+                <span class="w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-orbitron shrink-0">${String.fromCharCode(65 + i)}</span> 
+                <span>${opt}</span>
             </button>
         `).join('');
 
         resetTimer();
     }
 
+    let customTimerSeconds = 20;
     function resetTimer() {
         clearInterval(timerInterval);
-        let timeLeft = 20;
+        customTimerSeconds = 20;
         const timerBar = document.getElementById('timerBar');
         const timerText = document.getElementById('timerText');
 
         timerBar.style.width = '100%';
-        timerText.innerText = '20s';
+        timerText.innerText = `${customTimerSeconds}s`;
 
         timerInterval = setInterval(() => {
-            timeLeft--;
-            timerText.innerText = `${timeLeft}s`;
-            timerBar.style.width = `${(timeLeft / 20) * 100}%`;
+            customTimerSeconds--;
+            timerText.innerText = `${customTimerSeconds}s`;
+            timerBar.style.width = `${(customTimerSeconds / 20) * 100}%`;
 
-            if (timeLeft <= 0) {
+            if (customTimerSeconds % 4 === 0 && Math.random() > 0.3) {
+                opponentScore += 50;
+                document.getElementById('opponentScore').innerText = opponentScore;
+            }
+
+            if (customTimerSeconds <= 0) {
                 clearInterval(timerInterval);
                 submitAnswer(-1);
             }
         }, 1000);
     }
 
+    function usePowerUp(type) {
+        if (type === '5050') {
+            const btns = document.querySelectorAll('#answerOptionsGrid button');
+            if (btns.length >= 2) {
+                btns[0].style.opacity = '0.3';
+                btns[0].disabled = true;
+                btns[1].style.opacity = '0.3';
+                btns[1].disabled = true;
+            }
+            document.getElementById('pw5050').disabled = true;
+        } else if (type === 'double') {
+            streakCount += 2;
+            updateStreakUI();
+            document.getElementById('pwDouble').disabled = true;
+        } else if (type === 'time') {
+            customTimerSeconds += 10;
+            document.getElementById('pwTime').disabled = true;
+        }
+    }
+
     function submitAnswer(selectedIndex) {
         clearInterval(timerInterval);
-        const qList = fullQuestionBank;
+        const filteredQ = fullQuestionBank.filter(q => q.grade === userState.selectedGrade && q.subject === userState.selectedSubject);
+        const qList = filteredQ.length > 0 ? filteredQ : fullQuestionBank;
         const q = qList[currentQIndex % qList.length];
         const isCorrect = selectedIndex === q.answer;
 
         if (isCorrect) {
             playSound('correct');
-            playerScore += 100;
+            streakCount++;
+            let earned = 100 * (streakCount >= 4 ? 3 : streakCount >= 2 ? 2 : 1);
+            playerScore += earned;
             document.getElementById('playerScore').innerText = playerScore;
-            confetti({ particleCount: 40, spread: 60 });
+            confetti({ particleCount: 50, spread: 70 });
         } else {
             playSound('wrong');
+            streakCount = 0;
         }
+        updateStreakUI();
 
         document.getElementById('explanationText').innerText = q.explanation;
         document.getElementById('explanationBox').classList.remove('hidden');
 
+        quizizzPlayers[0].score = playerScore;
+        quizizzPlayers.sort((a, b) => b.score - a.score);
+
         setTimeout(() => {
-            currentQIndex++;
-            loadQuestion(currentQIndex);
+            if (activeGameMode === 'quizizzLive') {
+                showQuizizzLeaderboard();
+            } else {
+                currentQIndex++;
+                loadQuestion(currentQIndex);
+            }
         }, 2500);
     }
 
-    function finishMatch() {
-        userState.coins += 150;
-        userState.rp += 30;
-        updateUserUI();
-        alert(`Chúc mừng! Bạn đã hoàn thành xuất sắc bài tập SGK Kết Nối Tri Thức với ${playerScore} điểm. nhận ngay +150 Xu & +30 RP!`);
+    function showQuizizzLeaderboard() {
         document.getElementById('gamePlayArea').classList.add('hidden');
+        document.getElementById('powerUpsBar').classList.add('hidden');
+        const lbModal = document.getElementById('quizizzLeaderboardModal');
+        lbModal.classList.remove('hidden');
+
+        const listContainer = document.getElementById('liveLeaderboardList');
+        listContainer.innerHTML = quizizzPlayers.map((p, idx) => `
+            <div class="flex items-center justify-between bg-slate-900/90 border border-slate-800 p-3 rounded-xl">
+                <div class="flex items-center gap-3">
+                    <span class="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 font-bold text-xs flex items-center justify-center font-orbitron">${idx + 1}</span>
+                    <span class="text-xs font-bold text-white">${p.name}</span>
+                </div>
+                <span class="text-xs font-orbitron font-bold text-yellow-400">${p.score} điểm</span>
+            </div>
+        `).join('');
+    }
+
+    function nextQuizizzQuestion() {
+        document.getElementById('quizizzLeaderboardModal').classList.add('hidden');
+        document.getElementById('gamePlayArea').classList.remove('hidden');
+        document.getElementById('powerUpsBar').classList.remove('hidden');
+        currentQIndex++;
+        loadQuestion(currentQIndex);
+    }
+
+    function finishMatch() {
+        userState.coins += 250;
+        userState.rp += 50;
+        updateUserUI();
+        confetti({ particleCount: 200, spread: 120 });
+        document.getElementById('gamePlayArea').classList.add('hidden');
+        document.getElementById('powerUpsBar').classList.add('hidden');
+        alert(`🏆 HOÀN THÀNH XUẤT SẮC!\nBạn ghi được ${playerScore} điểm.\nThưởng +250 Xu & +50 RP vào tài khoản!`);
+        switchTab('home');
     }
 
     /* ==========================================================================
-       8. CUSTOM QUIZ CREATOR LOGIC
+       4. OTHER UTILITIES (SHOP, CREATOR, PROFILE, CHAT)
        ========================================================================== */
+    function renderSkinsShop() {
+        document.getElementById('skinsShopGrid').innerHTML = shopSkins.map(skin => `
+            <div class="cyber-glass p-4 rounded-2xl border border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <img src="https://api.dicebear.com/7.x/bottts/svg?seed=${skin.seed}" class="w-12 h-12 bg-slate-900 rounded-xl border border-cyan-400">
+                    <div>
+                        <h4 class="font-bold text-xs text-white">${skin.name}</h4>
+                        <p class="text-[10px] text-slate-400">${skin.desc}</p>
+                    </div>
+                </div>
+                <button onclick="buySkin('${skin.id}', ${skin.price})" class="px-3 py-1.5 rounded-xl text-xs font-bold ${userState.ownedSkins.includes(skin.id) ? 'bg-slate-800 text-cyan-400 border border-cyan-500/40' : 'cyber-button text-black'}">
+                    ${userState.ownedSkins.includes(skin.id) ? (userState.equippedSkin === skin.id ? 'Đang Mặc' : 'Dùng') : `${skin.price} Xu`}
+                </button>
+            </div>
+        `).join('');
+
+        document.getElementById('framesShopGrid').innerHTML = shopFrames.map(frame => `
+            <div class="cyber-glass p-3 rounded-2xl border border-slate-800 flex items-center justify-between">
+                <div>
+                    <h4 class="font-bold text-xs text-white">${frame.name}</h4>
+                    <p class="text-[9px] text-slate-400">${frame.desc}</p>
+                </div>
+                <button onclick="buyFrame('${frame.id}', ${frame.price})" class="px-3 py-1.5 rounded-xl text-xs font-bold ${userState.ownedFrames.includes(frame.id) ? 'bg-slate-800 text-purple-400 border border-purple-500/40' : 'cyber-button text-black'}">
+                    ${userState.ownedFrames.includes(frame.id) ? (userState.equippedFrame === frame.cssClass ? 'Đang Dùng' : 'Chọn') : `${frame.price} Xu`}
+                </button>
+            </div>
+        `).join('');
+    }
+
+    function buySkin(id, price) {
+        if (userState.ownedSkins.includes(id)) {
+            userState.equippedSkin = id;
+        } else {
+            if (userState.coins >= price) {
+                userState.coins -= price;
+                userState.ownedSkins.push(id);
+                userState.equippedSkin = id;
+                alert("Đã mua và trang bị thành công!");
+            } else {
+                alert("Không đủ Xu để mua trang phục này!");
+            }
+        }
+        updateUserUI();
+        renderSkinsShop();
+    }
+
+    function buyFrame(id, price) {
+        const frameObj = shopFrames.find(f => f.id === id);
+        if (userState.ownedFrames.includes(id)) {
+            userState.equippedFrame = frameObj.cssClass;
+        } else {
+            if (userState.coins >= price) {
+                userState.coins -= price;
+                userState.ownedFrames.push(id);
+                userState.equippedFrame = frameObj.cssClass;
+                alert("Đã mở khóa khung vinh quang thành công!");
+            } else {
+                alert("Không đủ Xu!");
+            }
+        }
+        updateUserUI();
+        renderSkinsShop();
+    }
+
+    function spinWheel() {
+        if (userState.coins < 100) {
+            alert("Bạn cần ít nhất 100 Xu để quay vòng quay!");
+            return;
+        }
+        userState.coins -= 100;
+        updateUserUI();
+
+        const wheel = document.getElementById('wheelGraphic');
+        const randomDeg = Math.floor(1440 + Math.random() * 1440);
+        wheel.style.transform = `rotate(${randomDeg}deg)`;
+
+        setTimeout(() => {
+            const rewards = ["+500 XU", "+100 RP", "X2 Chuỗi Ngày", "Thẻ Bảo Vệ Rank", "+200 XU"];
+            const prize = rewards[Math.floor(Math.random() * rewards.length)];
+            if (prize.includes("XU")) userState.coins += 300;
+            if (prize.includes("RP")) userState.rp += 100;
+            updateUserUI();
+            alert(`🎉 CHÚC MỪNG BẠN QUAY TRÙNG: ${prize}!`);
+        }, 4000);
+    }
+
+    function renderLeaderboard() {
+        const dummyRank = [
+            { rank: 1, name: "Nguyễn Văn An", title: "Thần Đồng Kết Nối", rp: 1450, win: "96%" },
+            { rank: 2, name: "Trần Thị Bích", title: "Kiện Tướng Toán Học", rp: 1320, win: "92%" },
+            { rank: 3, name: "Học Sinh Bá Vương (Bạn)", title: userState.badge, rp: userState.rp, win: "89%" },
+            { rank: 4, name: "Lê Hoàng Minh", title: "Bậc Thầy Tự Nhiên", rp: 1100, win: "85%" },
+            { rank: 5, name: "Phạm Quỳnh Nga", title: "Trùm IQ Logic", rp: 950, win: "80%" }
+        ];
+        document.getElementById('leaderboardTbody').innerHTML = dummyRank.map(r => `
+            <tr class="border-b border-slate-800/60 hover:bg-slate-900/40">
+                <td class="p-3 font-orbitron font-bold text-cyan-400">#${r.rank}</td>
+                <td class="p-3 font-bold text-white">${r.name}</td>
+                <td class="p-3 text-slate-300">${r.title}</td>
+                <td class="p-3 font-bold text-yellow-400">${r.rp} RP</td>
+                <td class="p-3 text-emerald-400 font-bold">${r.win}</td>
+            </tr>
+        `).join('');
+    }
+
     function saveCustomQuestion(e) {
         e.preventDefault();
         const newQ = {
-            subject: document.getElementById('creatorSubject').value,
             grade: document.getElementById('creatorGrade').value,
+            subject: document.getElementById('creatorSubject').value,
             question: document.getElementById('creatorQuestion').value,
             options: [
                 document.getElementById('creatorOptA').value,
@@ -1124,126 +1949,74 @@
             answer: parseInt(document.getElementById('creatorCorrect').value),
             explanation: document.getElementById('creatorExplanation').value
         };
-
-        userState.customQuestions.push(newQ);
         fullQuestionBank.push(newQ);
-        alert("Đã lưu câu hỏi tự tạo thành công vào Ngân Hàng Đề Thi!");
+        alert("Đã thêm câu hỏi thành công vào hệ thống Đấu Trường!");
         document.getElementById('quizCreatorForm').reset();
     }
 
     function exportQuizJSON() {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(userState.customQuestions, null, 2));
-        const downloadAnchor = document.createElement('a');
-        downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", "Custom_Quiz_KetNoiTriThuc.json");
-        document.body.appendChild(downloadAnchor);
-        downloadAnchor.click();
-        downloadAnchor.remove();
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(fullQuestionBank, null, 2));
+        const dlAnchor = document.createElement('a');
+        dlAnchor.setAttribute("href", dataStr);
+        dlAnchor.setAttribute("download", "Quiz_KetNoiTriThuc_2026.json");
+        document.body.appendChild(dlAnchor);
+        dlAnchor.click();
+        dlAnchor.remove();
     }
 
-    /* ==========================================================================
-       9. CHATROOM & OTHER FEATURES
-       ========================================================================== */
     function sendChatMessage(e) {
         e.preventDefault();
         const input = document.getElementById('chatInput');
-        const text = input.value.trim();
-        if (!text) return;
-
         const log = document.getElementById('chatMessagesLog');
+        if (!input.value.trim()) return;
+
         log.innerHTML += `
-            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-xs text-right">
-                <span class="font-bold text-cyan-400">${userState.name}:</span>
-                <span class="text-slate-200 ml-1">${text}</span>
+            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-xs">
+                <span class="font-bold text-purple-400">${userState.name}:</span>
+                <span class="text-slate-300">${input.value}</span>
             </div>
         `;
-        input.value = "";
+        const userMsg = input.value;
+        input.value = '';
         log.scrollTop = log.scrollHeight;
-    }
-
-    function renderSkinsShop() {
-        const shopSkins = [
-            { id: "TeacherCyber", name: "Thầy Cyber", price: 0, seed: "TeacherCyber", desc: "Mascot mặc định chuẩn Cyberpunk." },
-            { id: "GeniusStudent", name: "Nữ Sinh Thiên Tài", price: 500, seed: "GeniusStudent", desc: "+5% thưởng Xu sau trận đấu." },
-            { id: "RobotAI", name: "Robot AI Kết Nối", price: 800, seed: "RobotAI", desc: "Trợ lý giải bài siêu tốc độ." }
-        ];
-
-        const container = document.getElementById('skinsShopGrid');
-        container.innerHTML = shopSkins.map(s => `
-            <div class="cyber-glass p-4 rounded-2xl flex items-center gap-3 border border-slate-800">
-                <img src="https://api.dicebear.com/7.x/bottts/svg?seed=${s.seed}" class="w-12 h-12 rounded-xl bg-slate-900 border border-slate-700">
-                <div class="flex-1">
-                    <h4 class="font-bold text-xs text-white">${s.name}</h4>
-                    <p class="text-[10px] text-slate-400 mb-2">${s.desc}</p>
-                    <button class="text-[10px] bg-cyan-500/20 text-cyan-300 px-2.5 py-1 rounded-md font-bold">SỬ DỤNG</button>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    function renderLeaderboard() {
-        const leaderboardData = [
-            { rank: 1, name: "Nguyễn Minh Triết", badge: "Thần Đồng Kết Nối", rp: "2,450 RP", winRate: "95%" },
-            { rank: 2, name: "Trần Bảo Ngọc", badge: "Kiện Tướng Toán Học", rp: "2,100 RP", winRate: "92%" },
-            { rank: 3, name: userState.name, badge: userState.badge, rp: `${userState.rp} RP`, winRate: "89%" }
-        ];
-
-        const tbody = document.getElementById('leaderboardTbody');
-        tbody.innerHTML = leaderboardData.map(row => `
-            <tr class="border-b border-slate-800/50 hover:bg-slate-900/50">
-                <td class="p-3 font-bold font-orbitron ${row.rank === 1 ? 'text-yellow-400' : 'text-slate-300'}">#${row.rank}</td>
-                <td class="p-3 font-bold text-white">${row.name}</td>
-                <td class="p-3 text-cyan-400">${row.badge}</td>
-                <td class="p-3 font-bold text-purple-400">${row.rp}</td>
-                <td class="p-3 text-emerald-400 font-bold">${row.winRate}</td>
-            </tr>
-        `).join('');
-    }
-
-    function spinWheel() {
-        if (userState.coins < 100) {
-            alert("Bạn cần 100 Xu để thực hiện Vòng Quay May Mắn!");
-            return;
-        }
-
-        userState.coins -= 100;
-        updateUserUI();
-
-        const wheel = document.getElementById('wheelGraphic');
-        wheel.style.transform = `rotate(${3600 + Math.floor(Math.random() * 360)}deg)`;
 
         setTimeout(() => {
-            userState.coins += 300;
-            updateUserUI();
-            confetti({ particleCount: 80, spread: 70 });
-            alert("Chúc mừng! Bạn đã quay trúng phần thưởng 300 XU!");
-        }, 4000);
+            log.innerHTML += `
+                <div class="bg-cyan-950/40 p-3 rounded-xl border border-cyan-500/30 text-xs">
+                    <span class="font-bold text-cyan-400">Thầy Cyber AI:</span>
+                    <span class="text-slate-300">Cảm ơn em đã đặt câu hỏi về "${userMsg}". Theo SGK Kết Nối Tri Thức, nội dung này em cần chú ý nắm vững định nghĩa cốt lõi và làm thêm bài tập vận dụng nhé!</span>
+                </div>
+            `;
+            log.scrollTop = log.scrollHeight;
+        }, 1000);
     }
 
     function openProfileModal() { document.getElementById('profileModal').classList.remove('hidden'); }
     function closeProfileModal() { document.getElementById('profileModal').classList.add('hidden'); }
     function saveProfile() {
-        userState.name = document.getElementById('inputDisplayName').value || "Học Sinh Bá Vương";
+        userState.name = document.getElementById('inputDisplayName').value;
         userState.badge = document.getElementById('selectBadge').value;
         updateUserUI();
         closeProfileModal();
+        alert("Đã lưu hồ sơ thành công!");
     }
 
     function openShareModal() { document.getElementById('shareModal').classList.remove('hidden'); }
     function closeShareModal() { document.getElementById('shareModal').classList.add('hidden'); }
+
     function downloadShareCard() {
-        html2canvas(document.getElementById('shareCardGraphic')).then(canvas => {
+        const cardElement = document.getElementById('shareCardGraphic');
+        html2canvas(cardElement).then(canvas => {
             const link = document.createElement('a');
-            link.download = `Honor_Card_${userState.name}.png`;
+            link.download = 'TheVinhDanh_KetNoiTriThuc.png';
             link.href = canvas.toDataURL();
             link.click();
         });
     }
 
     function exportTeacherReport() {
-        alert("Đã xuất thành công báo cáo điểm số lớp học theo chương trình SGK Kết Nối Tri Thức dưới dạng Excel!");
+        alert("Đã xuất file báo cáo tổng hợp tiến độ học tập (Excel/CSV) về máy thành công!");
     }
 </script>
-
 </body>
 </html>
